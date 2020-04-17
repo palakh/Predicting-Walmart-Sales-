@@ -1,0 +1,487 @@
+---
+pdf_document: default
+html_document: default
+---
+
+```{r}
+rm(list=ls())
+```
+
+```{r}
+walmart = read.csv('Walmart hard coded data v4.csv')
+walmart$Weekly_Sales = walmart$Weekly_Sales/1000
+attach (walmart) 
+```
+
+
+```{r include=FALSE}
+head(walmart)
+```
+
+```{r}
+set.seed(9)
+train = sample(1:nrow(walmart),nrow(walmart)*0.8)
+out_of_sample = walmart[-train,]
+train = walmart[train,]
+
+```
+
+
+```{r}
+library(kknn)
+```
+
+KNN with all variables
+
+```{r}
+
+#calculate best k value
+
+out_MSE = NULL
+
+for (i in 2:1000){
+
+near = kknn(Weekly_Sales~.,train,out_of_sample,k=i,kernel = "rectangular")
+aux = mean((out_of_sample[,1]-near$fitted)^2)
+
+out_MSE = c(out_MSE,aux)
+}
+
+
+best = which.min(out_MSE)
+
+```
+
+
+```{r}
+#print best k value
+best
+```
+
+```{r}
+#plot the different RMSE values
+plot(log(1/(2:1000)),sqrt(out_MSE),xlab="Complexity (log(1/k))",ylab="out-of-sample RMSE",col=4,lwd=2,type="l",cex.lab=1.2)
+text(log(1/best)-1,sqrt(out_MSE[best])+0.3,paste("k=",best),col=2,cex=1.2)
+text(log(1/5),sqrt(out_MSE[5]),paste("k=",5),col=2,cex=1.2)
+text(log(1/100)+0.4,sqrt(out_MSE[100]),paste("k=",100),col=2,cex=1.2)
+
+paste("k= 5 RMSE:", sqrt(out_MSE[5]))
+paste("k= 100 RMSE:", sqrt(out_MSE[100]))
+paste("k=", best, 'RMSE:', sqrt(out_MSE[best]))
+
+```
+
+
+KNN with only size
+
+```{r}
+#calculate best k value
+library(kknn)
+out_MSE_1 = NULL
+
+for (i in 2:1000){
+
+near_1 = kknn(Weekly_Sales~Size,train,out_of_sample,k=i,kernel = "rectangular")
+aux_1 = mean((out_of_sample[,1]-near_1$fitted)^2)
+
+out_MSE_1 = c(out_MSE_1,aux_1)
+}
+
+
+best_1 = which.min(out_MSE_1)
+```
+
+
+```{r}
+#print best k value
+best_1
+```
+
+```{r}
+#plot the different RMSE values
+plot(log(1/(2:1000)),sqrt(out_MSE_1),xlab="Complexity (log(1/k))",ylab="out-of-sample RMSE",col=4,lwd=2,type="l",cex.lab=1.2)
+text(log(1/best_1),sqrt(out_MSE_1[best_1])+0.3,paste("k=",best_1),col=2,cex=1.2)
+text(log(1/5),sqrt(out_MSE_1[5]),paste("k=",5),col=2,cex=1.2)
+text(log(1/250)+0.4,sqrt(out_MSE_1[250]),paste("k=",250),col=2,cex=1.2)
+
+paste("k= 5 RMSE:", sqrt(out_MSE_1[5]))
+paste("k= 250 RMSE:", sqrt(out_MSE_1[250]))
+paste("k=", best_1, 'RMSE:', sqrt(out_MSE_1[best_1]))
+
+#plot knn graph
+near_1 = kknn(Weekly_Sales~Size,train,out_of_sample,k=best_1,kernel = "rectangular")
+ind_1 = order(out_of_sample[,6])
+plot(Size,Weekly_Sales,main=paste("k=",best_1),pch=19,cex=0.8,col="darkgray")
+lines(out_of_sample[ind_1,6],near_1$fitted[ind_1],col=2,lwd=2)
+```
+
+KNN with 13 variables
+
+```{r}
+#calculate best k value
+out_MSE_13 = NULL
+
+for (i in 2:1000){
+
+near_13 = kknn(Weekly_Sales~Temperature+Unemployment+Size+CPI+Jan+Feb+Mar+Apr+May+Jun+Oct+Nov+Dec,train,out_of_sample,k=i,kernel = "rectangular")
+aux = mean((out_of_sample[,1]-near_13$fitted)^2)
+
+out_MSE_13 = c(out_MSE_13,aux)
+}
+
+
+best_13 = which.min(out_MSE_13)
+```
+
+
+```{r}
+#print best k value
+best_13
+```
+
+```{r}
+#plot the different RMSE values
+plot(log(1/(2:1000)),sqrt(out_MSE_13),xlab="Complexity (log(1/k))",ylab="out-of-sample RMSE",col=4,lwd=2,type="l",cex.lab=1.2)
+text(log(1/best)-1,sqrt(out_MSE_13[best_13])+0.3,paste("k=",best_13),col=2,cex=1.2)
+text(log(1/5),sqrt(out_MSE_13[5]),paste("k=",5),col=2,cex=1.2)
+text(log(1/250)+0.4,sqrt(out_MSE_13[250]),paste("k=",250),col=2,cex=1.2)
+
+paste("k= 5 RMSE:", sqrt(out_MSE_13[5]))
+paste("k= 250 RMSE:", sqrt(out_MSE_13[250]))
+paste("k=", best_13, 'RMSE:', sqrt(out_MSE_13[best]))
+#plot knn graph
+#near_13 = kknn(Weekly_Sales~.,train,out_of_sample,k=best,kernel = "rectangular")
+
+#ind = order(out_of_sample[,1])
+#plot(Weekly_Sales,main=paste("k=",best_13),pch=19,cex=0.8,col="darkgray")
+#lines(out_of_sample[ind,1],near_13$fitted[ind],col=2,lwd=2)
+```
+
+
+KNN with two variables
+
+```{r}
+#calculate best k value
+out_MSE_2 = NULL
+
+for (i in 2:1000){
+
+near_2 = kknn(Weekly_Sales~Size+Dec,train,out_of_sample,k=i,kernel = "rectangular")
+aux = mean((out_of_sample[,1]-near_2$fitted)^2)
+
+out_MSE_2 = c(out_MSE_2,aux)
+}
+
+
+best_2 = which.min(out_MSE_2)
+```
+
+
+```{r}
+#print best k value
+best_2
+```
+
+```{r}
+#plot the different RMSE values
+plot(log(1/(2:1000)),sqrt(out_MSE_2),xlab="Complexity (log(1/k))",ylab="out-of-sample RMSE",col=4,lwd=2,type="l",cex.lab=1.2)
+text(log(1/best_2),sqrt(out_MSE_2[best_2])+0.3,paste("k=",best_2),col=2,cex=1.2)
+text(log(1/2),sqrt(out_MSE_2[2]),paste("k=",2),col=2,cex=1.2)
+text(log(1/250)+0.4,sqrt(out_MSE_2[250]),paste("k=",250),col=2,cex=1.2)
+
+paste("k= 5 RMSE:", sqrt(out_MSE_2[5]))
+paste("k= 250 RMSE:", sqrt(out_MSE_2[250]))
+paste("k=", best_2, 'RMSE:', sqrt(out_MSE_2[best_2]))
+```
+
+Linear Regression
+
+```{r}
+lm.fit =lm(Weekly_Sales∼.-Jul,data=train)
+summary(lm.fit)
+```
+
+******************** Subset Selection
+
+
+```{r}
+library(leaps)
+regfit.full = regsubsets(Weekly_Sales∼.-Jul,data=train, nvmax=17)
+summary(regfit.full)
+```
+
+```{r}
+par(mfrow =c(2,2))
+reg.summary = summary(regfit.full)
+plot(reg.summary$rss, xlab=" Number of Variables ",ylab=" RSS",type="l")
+plot(reg.summary$adjr2 ,xlab =" Number of Variables ",ylab=" Adjusted RSq",type="l")
+plot(reg.summary$bic ,xlab=" Number of Variables ",ylab=" BIC", type= "l")
+
+which.min(reg.summary$rss)
+which.max(reg.summary$adjr2)
+which.min(reg.summary$bic)
+```
+
+```{r}
+coef(regfit.full, 13)
+```
+
+```{r}
+lm.outofsample = lm(Weekly_Sales~Temperature+Unemployment+Size+CPI+Jan+Feb+Mar+Apr+May+Jun+Oct+Nov+Dec, data = out_of_sample)
+summary(lm.outofsample)
+```
+
+```{r}
+lm.outofsample = lm(Weekly_Sales~., data = out_of_sample)
+summary(lm.outofsample)
+```
+
+LASSO and Ridge
+
+
+```{r}
+library(glmnet)
+```
+
+```{r}
+x = model.matrix(Weekly_Sales~.-Jul, data = train)
+Ridge.Fit = glmnet(x,train$Weekly_Sales,alpha=0)
+plot(Ridge.Fit)
+```
+
+
+
+Finding the best Lambda that results in a simpler model as compared to the least Lambda.
+Defining the Cross Validation equation for Ridge and plotting it
+```{r}
+
+CV.R = cv.glmnet(x,train$Weekly_Sales,alpha=0)
+LamR = CV.R$lambda.1se
+LamR
+plot(CV.R)
+```
+
+```{r}
+sqrt(CV.R$cvm)
+```
+
+
+
+
+Plotting the Lambda against RMSE with line for log(lamR)
+```{r}
+par(mfrow=c(1,2))
+plot(log(CV.R$lambda),sqrt(CV.R$cvm),main="Ridge CV (k=10)",xlab="log(lambda)",ylab = "RMSE",col=4,type="b",cex.lab=1.2)
+abline(v=log(LamR),lty=2,col=2,lwd=2)
+```
+
+
+
+Predicting results from Cross Validation of Ridge
+```{r}
+
+coef.R = predict(CV.R,type="coefficients",s=LamR)
+summary(coef.R)
+
+```
+
+
+
+Defining the Lasso equation and plotting it
+
+```{r}
+x = model.matrix(Weekly_Sales~.-Jul, data = train)
+Lasso.Fit = glmnet(x,train$Weekly_Sales,alpha=1)
+plot(Lasso.Fit)
+
+```
+
+
+
+
+Finding the best Lambda that results in a simpler model as compared to the least Lambda.
+Defining the Cross Validation equation for Lasso and plotting it
+
+```{r}
+CV.L = cv.glmnet(x,train$Weekly_Sales,alpha=1)
+LamL = CV.L$lambda.1se
+```
+
+```{r}
+plot(log(CV.L$lambda),sqrt(CV.L$cvm),main="LASSO CV (k=10)",
+xlab="log(lambda)"
+,ylab = "RMSE",col=4,type="b",cex.lab=1.2)
+abline(v=log(LamL),lty=2,col=2,lwd=2)
+```
+
+
+Predicting results from Cross Validation of Ridge against Lasso
+```{r}
+coef.L = predict(CV.L,type="coefficients",s=LamL)
+summary(coef.L)
+
+plot(abs(coef.R[2:20]),abs(coef.L[2:20]),ylim=c(0,1),xlim=c(0,1))
+abline(0,1)
+```
+
+Trees
+
+```{r }
+library(randomForest)
+library(tree)
+```
+
+Regression Tree
+
+```{r}
+train_1 = sample(1:nrow(walmart),nrow(walmart)*0.8)
+walmart_reg_tree<-tree(Weekly_Sales~.-Jul, walmart, subset = train_1)
+summary(walmart_reg_tree)
+```
+
+```{r }
+plot(walmart_reg_tree)
+text(walmart_reg_tree, pretty = 0)
+```
+
+Using K-fold cross-validation (default K = 10): 
+
+```{r}
+cv.walmart<-cv.tree(walmart_reg_tree)
+plot(cv.walmart$size, cv.walmart$dev, type = 'b')
+cv.walmart
+```
+
+Cross-validation has chosen the most complex tree (12 nodes) since deviance (sum of squared errors) is minimum here. 
+
+Making predictions on the test set: 
+
+```{r}
+
+predict.walmart = predict(walmart_reg_tree, out_of_sample)
+MSE_r = mean((out_of_sample$Weekly_Sales - predict.walmart)^2)
+RMSE_r = sqrt(MSE_r)
+RMSE_r
+
+```
+
+## RandomForest
+
+With regression trees, we choose p/3 = 6 variables as our predictors at each step. 
+
+```{r }
+walmart.rf<-randomForest(Weekly_Sales~.-Jul, walmart, subset = train_1, mtry = 6, importance = TRUE)
+```
+
+```{r }
+walmart.rf
+```
+
+How well does the randomforest model work with test data? 
+
+```{r }
+yhat.rf.walmart = predict(walmart.rf, out_of_sample)
+MSE = mean((yhat.rf.walmart - out_of_sample$Weekly_Sales)^2)
+RMSE = sqrt(MSE)
+RMSE
+```
+
+Checking up the importance of each variable:
+
+```{r}
+importance(walmart.rf)
+```
+
+Store size, unemployment rate, and Consumer Price Index. 
+
+```{r}
+varImpPlot(walmart.rf
+           )
+```
+
+
+Bagging
+
+```{r}
+# changing isHoliday to factor 
+walmart$IsHoliday <- as.factor(walmart$IsHoliday)
+train=sample(1:nrow(walmart),size=nrow(walmart)*0.80)
+test <- walmart[-train,]
+```
+
+```{r}
+library (randomForest) 
+set.seed(9) 
+sapply(walmart, class)
+bag.data = randomForest(Weekly_Sales∼.-Jul,data=walmart,subset=train, mtry=16,importance=TRUE,ntree = 1000) 
+bag.data
+importance(bag.data)
+
+plot(importance(bag.data))
+varImpPlot (bag.data, sort= "TRUE")
+yhat.bag = predict(bag.data,newdata=test) 
+plot(yhat.bag , test$Weekly_Sales,xlab = " Predicted Values", ylab ="Observed Values" , col= 'red') 
+abline (0,1) 
+(mean((yhat.bag - test$Weekly_Sales)^2))^(1/2)
+```
+
+Boosting
+
+```{r}
+library(gbm) #boost package
+```
+
+```{r}
+boost.data=gbm(Weekly_Sales∼.-Jul,data=walmart[train,],distribution= "gaussian",n.trees=10000,interaction.depth=4,shrinkage = 0.2)
+summary(boost.data)
+boost.data
+
+par(mfrow=c(1,2)) 
+plot(boost.data,i="CPI") 
+plot(boost.data,i="Size")
+test = walmart[-train,]
+yhat.boost=predict(boost.data ,newdata =walmart[-train ,], n.trees=5000)  
+# yhat.boost
+# test
+# walmart$Weekly_Sales
+(mean((yhat.boost-test$Weekly_Sales)^2))^(1/2)
+
+
+```
+
+```{r}
+
+n.trees = seq(from=100 ,to=10000, by=100) #no of trees-a vector of 100 values
+
+#Generating a Prediction matrix for each Tree
+predmatrix<-predict(boost.data,walmart[-train,],n.trees = n.trees)
+dim(predmatrix) #dimentions of the Prediction Matrix
+
+#Calculating The Mean squared Test Error
+test.error<-with(walmart[-train,],apply( (predmatrix-Weekly_Sales)^2,2,mean))
+head(test.error) #contains the Mean squared test error for each of the 100 trees averaged
+
+#Plotting the test error vs number of trees
+
+plot(n.trees , test.error , pch=19,col="blue",xlab="Number of Trees",ylab="Test Error", main = "Perfomance of Boosting on Test Set")
+
+#adding the RandomForests Minimum Error line trained on same data and similar parameters
+abline(h = min(test.error),col="red") #test.err is the test error of a Random forest fitted on same data
+legend("topright",c("Minimum Test error Line for Random Forests"),col="red",lty=1,lwd=1)
+```
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
